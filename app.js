@@ -10,6 +10,7 @@ const firebaseConfig = {
   messagingSenderId: "182302177862",
   appId: "1:182302177862:web:65e7d3b55ac1139a15e847"
 };
+
 // Initialize Firebase
 let auth = null;
 let database = null;
@@ -18,81 +19,83 @@ if (typeof firebase !== 'undefined') {
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   }
+
+  // Add App Check initialization here
+  if (firebase.appCheck) {
+    firebase.appCheck().activate(
+      '6LfwLokrAAAAAOQKcNFtDFafQ_zg3s1D2N2hqw7a', // <-- replace with your reCAPTCHA v3 site key
+      true // Set to true to enable automatic token refresh
+    );
+  }
+
   auth = firebase.auth();
   database = firebase.database();
 }
 
-// Sample Orders Data
+// Sample Orders Data with rejection reasons
 const sampleOrders = [
   {
-    id: "NEX10ABC",
-    customerId: "cust001",
-    customerName: "John Smith",
-    customerEmail: "john@example.com",
-    customerPhone: "+1234567890",
-    services: ["Logo Design", "Website Development"],
-    projectDescription: "Need a modern logo and responsive website for tech startup",
+    id: "NEX10FDL",
+    orderId: "NEX10FDL",
+    name: "vsd",
+    email: "sdvs",
+    phone: "sdvsv",
+    company: "vsdvs",
+    services: ["One-Page Website"],
+    projectDescription: "sdvsvs",
+    budget: "",
+    timeline: "",
     status: "pending_approval",
     progress: 0,
-    priority: "high",
-    createdAt: "2025-07-19T10:30:00Z",
-    updatedAt: "2025-07-19T10:30:00Z"
+    priority: "medium",
+    createdAt: "2025-07-19T10:57:29.219Z",
+    updatedAt: "2025-07-19T10:58:18.559Z"
   },
   {
-    id: "NEX10XYZ",
-    customerId: "cust002",
-    customerName: "Sarah Johnson",
-    customerEmail: "sarah@company.com",
-    customerPhone: "+1987654321",
-    services: ["Brand Identity Package", "Social Media Design"],
-    projectDescription: "Complete branding package for new restaurant chain",
+    id: "NEX10ABC",
+    orderId: "NEX10ABC",
+    name: "John Smith",
+    email: "john@example.com",
+    phone: "+1234567890",
+    company: "Tech Solutions Inc",
+    services: ["Logo Design", "Website Development"],
+    projectDescription: "Need a modern logo and responsive website for tech startup",
     status: "approved",
     progress: 50,
-    priority: "medium",
+    priority: "high",
     createdAt: "2025-07-18T14:15:00Z",
     updatedAt: "2025-07-19T09:20:00Z"
   },
   {
-    id: "NEX10DEF",
-    customerId: "cust003",
-    customerName: "Michael Chen",
-    customerEmail: "mike@startup.io",
-    customerPhone: "+1122334455",
-    services: ["Website Redesign", "SEO Optimization"],
-    projectDescription: "Modernize existing website and improve search rankings",
+    id: "NEX10XYZ",
+    orderId: "NEX10XYZ",
+    name: "Sarah Johnson",
+    email: "sarah@company.com",
+    phone: "+1987654321",
+    company: "Restaurant Chain Co",
+    services: ["Brand Identity Package", "Social Media Design"],
+    projectDescription: "Complete branding package for new restaurant chain",
     status: "completed",
     progress: 100,
-    priority: "low",
+    priority: "medium",
     createdAt: "2025-07-15T11:45:00Z",
     updatedAt: "2025-07-19T16:00:00Z"
   },
   {
-    id: "NEX10GHI",
-    customerId: "cust004",
-    customerName: "Lisa Wang",
-    customerEmail: "lisa@creative.com",
-    customerPhone: "+1555666777",
-    services: ["Logo Design", "Business Cards"],
-    projectDescription: "Professional branding for consulting business",
-    status: "pending_approval",
+    id: "NEX10REJ",
+    orderId: "NEX10REJ",
+    name: "Mark Wilson",
+    email: "mark@test.com",
+    phone: "+1555666777",
+    company: "Test Company",
+    services: ["Logo Design"],
+    projectDescription: "Simple logo design for small business",
+    status: "rejected",
     progress: 0,
-    priority: "medium",
-    createdAt: "2025-07-19T08:15:00Z",
-    updatedAt: "2025-07-19T08:15:00Z"
-  },
-  {
-    id: "NEX10JKL",
-    customerId: "cust005",
-    customerName: "David Rodriguez",
-    customerEmail: "david@foodie.com",
-    customerPhone: "+1777888999",
-    services: ["Website Development", "SEO Optimization"],
-    projectDescription: "Food delivery app landing page with SEO optimization",
-    status: "approved",
-    progress: 75,
-    priority: "high",
+    priority: "low",
+    rejectionReason: "Insufficient project details provided. Please submit a more comprehensive brief with specific requirements, target audience information, and reference materials.",
     createdAt: "2025-07-17T12:00:00Z",
-    updatedAt: "2025-07-19T14:30:00Z"
+    updatedAt: "2025-07-18T14:30:00Z"
   }
 ];
 
@@ -112,6 +115,164 @@ const statusMappings = {
   "in_review": "In Review",
   "completed": "Completed",
   "rejected": "Rejected"
+};
+
+// Modal Components
+const Modal = ({ isOpen, onClose, children, closeOnBackdrop = true }) => {
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    const handleClickOutside = (e) => {
+      if (closeOnBackdrop && modalRef.current && !modalRef.current.contains(e.target)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.addEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose, closeOnBackdrop]);
+
+  if (!isOpen) return null;
+
+  return React.createElement('div', { className: 'modal-backdrop' },
+    React.createElement('div', { className: 'modal-content', ref: modalRef },
+      children
+    )
+  );
+};
+
+const ApproveModal = ({ isOpen, onClose, order, onConfirm, loading }) => {
+  return React.createElement(Modal, { isOpen, onClose },
+    React.createElement('div', { className: 'modal-header' },
+      React.createElement('h3', { className: 'modal-title' }, 'Approve Order'),
+      React.createElement('button', {
+        className: 'modal-close',
+        onClick: onClose,
+        'aria-label': 'Close modal'
+      }, React.createElement('i', { className: 'fas fa-times' }))
+    ),
+
+    React.createElement('div', { className: 'modal-body' },
+      React.createElement('p', { className: 'modal-description' },
+        'Are you sure you want to approve this order? The client will be notified and the project will move to the approved status.'
+      ),
+      
+      order && React.createElement('div', { className: 'modal-order-info' },
+        React.createElement('div', { className: 'modal-order-id' }, `Order: ${order.orderId}`),
+        React.createElement('div', { className: 'modal-order-customer' }, `Client: ${order.name}`)
+      )
+    ),
+
+    React.createElement('div', { className: 'modal-footer' },
+      React.createElement('button', {
+        className: 'modal-btn modal-btn-secondary',
+        onClick: onClose,
+        disabled: loading
+      }, 'Cancel'),
+      React.createElement('button', {
+        className: 'modal-btn modal-btn-primary',
+        onClick: onConfirm,
+        disabled: loading
+      },
+        loading && React.createElement('i', { className: 'fas fa-spinner fa-spin' }),
+        loading ? 'Approving...' : 'Approve Order'
+      )
+    )
+  );
+};
+
+const RejectModal = ({ isOpen, onClose, order, onConfirm, loading }) => {
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = () => {
+    if (!rejectionReason.trim()) {
+      setError('Please provide a reason for rejection');
+      return;
+    }
+    if (rejectionReason.trim().length < 10) {
+      setError('Please provide a more detailed reason (minimum 10 characters)');
+      return;
+    }
+    setError('');
+    onConfirm(rejectionReason.trim());
+  };
+
+  const handleClose = () => {
+    setRejectionReason('');
+    setError('');
+    onClose();
+  };
+
+  return React.createElement(Modal, { isOpen, onClose: handleClose },
+    React.createElement('div', { className: 'modal-header' },
+      React.createElement('h3', { className: 'modal-title' }, 'Reject Order'),
+      React.createElement('button', {
+        className: 'modal-close',
+        onClick: handleClose,
+        'aria-label': 'Close modal'
+      }, React.createElement('i', { className: 'fas fa-times' }))
+    ),
+
+    React.createElement('div', { className: 'modal-body' },
+      React.createElement('p', { className: 'modal-description' },
+        'Please provide a detailed reason for rejecting this order. This information will be saved and can be referenced later.'
+      ),
+      
+      order && React.createElement('div', { className: 'modal-order-info' },
+        React.createElement('div', { className: 'modal-order-id' }, `Order: ${order.orderId}`),
+        React.createElement('div', { className: 'modal-order-customer' }, `Client: ${order.name}`)
+      ),
+
+      React.createElement('form', { className: 'rejection-form' },
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', { className: 'form-label' }, 'Reason for Rejection *'),
+          React.createElement('textarea', {
+            className: `form-control rejection-textarea ${error ? 'error' : ''}`,
+            placeholder: 'Please explain why this order is being rejected...',
+            value: rejectionReason,
+            onChange: (e) => {
+              setRejectionReason(e.target.value);
+              if (error) setError('');
+            },
+            disabled: loading
+          }),
+          error && React.createElement('div', { className: 'form-error' }, error)
+        )
+      )
+    ),
+
+    React.createElement('div', { className: 'modal-footer' },
+      React.createElement('button', {
+        className: 'modal-btn modal-btn-secondary',
+        onClick: handleClose,
+        disabled: loading
+      }, 'Cancel'),
+      React.createElement('button', {
+        className: 'modal-btn modal-btn-danger',
+        onClick: handleSubmit,
+        disabled: loading
+      },
+        loading && React.createElement('i', { className: 'fas fa-spinner fa-spin' }),
+        loading ? 'Rejecting...' : 'Reject Order'
+      )
+    )
+  );
 };
 
 // Login Component
@@ -215,22 +376,26 @@ const OrderCard = ({ order, onApprove, onReject, onUpdateProgress, showProgressT
 
   return React.createElement('div', { className: 'order-card fade-in' },
     React.createElement('div', { className: 'order-header' },
-      React.createElement('div', { className: 'order-id' }, order.id),
+      React.createElement('div', { className: 'order-id' }, order.orderId),
       React.createElement('div', { 
         className: `order-priority priority-${order.priority}` 
       }, order.priority.toUpperCase())
     ),
 
     React.createElement('div', { className: 'order-customer' },
-      React.createElement('div', { className: 'customer-name' }, order.customerName),
+      React.createElement('div', { className: 'customer-name' }, order.name),
       React.createElement('div', { className: 'customer-details' },
         React.createElement('div', { className: 'customer-detail' },
           React.createElement('i', { className: 'fas fa-envelope' }),
-          order.customerEmail
+          order.email
         ),
         React.createElement('div', { className: 'customer-detail' },
           React.createElement('i', { className: 'fas fa-phone' }),
-          order.customerPhone
+          order.phone
+        ),
+        order.company && React.createElement('div', { className: 'customer-detail' },
+          React.createElement('i', { className: 'fas fa-building' }),
+          order.company
         )
       )
     ),
@@ -238,7 +403,7 @@ const OrderCard = ({ order, onApprove, onReject, onUpdateProgress, showProgressT
     React.createElement('div', { className: 'order-services' },
       React.createElement('div', { className: 'services-label' }, 'Services'),
       React.createElement('div', { className: 'services-list' },
-        order.services.map((service, index) =>
+        (order.services || []).map((service, index) =>
           React.createElement('span', {
             key: index,
             className: 'service-tag'
@@ -250,6 +415,12 @@ const OrderCard = ({ order, onApprove, onReject, onUpdateProgress, showProgressT
     React.createElement('div', { className: 'order-description' },
       React.createElement('div', { className: 'description-label' }, 'Project Description'),
       React.createElement('div', { className: 'description-text' }, order.projectDescription)
+    ),
+
+    // Show rejection reason if order is rejected
+    order.status === 'rejected' && order.rejectionReason && React.createElement('div', { className: 'rejection-reason' },
+      React.createElement('div', { className: 'rejection-reason-label' }, 'Rejection Reason'),
+      React.createElement('div', { className: 'rejection-reason-text' }, order.rejectionReason)
     ),
 
     showProgressTracker && React.createElement('div', { className: 'progress-section' },
@@ -295,14 +466,14 @@ const OrderCard = ({ order, onApprove, onReject, onUpdateProgress, showProgressT
     order.status === 'pending_approval' && React.createElement('div', { className: 'order-actions' },
       React.createElement('button', {
         className: 'action-btn btn-approve',
-        onClick: () => onApprove(order.id)
+        onClick: () => onApprove(order)
       },
         React.createElement('i', { className: 'fas fa-check' }),
         'Approve'
       ),
       React.createElement('button', {
         className: 'action-btn btn-reject',
-        onClick: () => onReject(order.id)
+        onClick: () => onReject(order)
       },
         React.createElement('i', { className: 'fas fa-times' }),
         'Reject'
@@ -320,29 +491,26 @@ const Dashboard = ({ user, onLogout }) => {
   // Fetch orders from Firebase on mount
   useEffect(() => {
     setLoading(true);
-    const ordersRef = database.ref('/orders'); // <-- use /orders node
+    const ordersRef = database.ref('orders');
     ordersRef.on('value', (snapshot) => {
       const data = snapshot.val() || {};
       // Convert object to array and add id
       const ordersArray = Object.entries(data).map(([id, order]) => ({
         id,
         ...order,
-        // Provide defaults for missing fields
         status: order.status || (order.progress === 100 ? 'completed' : order.progress === 0 ? 'pending_approval' : 'approved'),
         priority: order.priority || 'medium',
-        customerName: order.customerName || order.name || '',
-        customerEmail: order.customerEmail || order.email || '',
-        customerPhone: order.customerPhone || order.phone || '',
-        createdAt: order.createdAt || '',
         updatedAt: order.updatedAt || order.createdAt || '',
-        services: order.services || [],
-        projectDescription: order.projectDescription || '',
       }));
       setOrders(ordersArray);
       setLoading(false);
     });
     return () => ordersRef.off();
   }, []);
+
+  // Modal states
+  const [approveModal, setApproveModal] = useState({ isOpen: false, order: null });
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, order: null });
 
   // Filter orders by status
   const getOrdersByStatus = (status) => {
@@ -352,21 +520,54 @@ const Dashboard = ({ user, onLogout }) => {
       case 'pending':
         return orders.filter(order => order.status === 'approved' && order.progress < 100);
       case 'completed':
-        return orders.filter(order => order.status === 'completed');
+        return orders.filter(order => order.status === 'completed' || order.status === 'rejected' || order.progress === 100);
       default:
         return [];
     }
   };
 
-  // Approve order
-  const handleApprove = async (orderId) => {
+  // Update order in database
+  const updateOrderInDatabase = async (orderId, updates) => {
+    try {
+      if (database) {
+        await database.ref(`orders/${orderId}`).update({
+          ...updates,
+          updatedAt: new Date().toISOString()
+        });
+        console.log(`Order ${orderId} updated in Firebase`);
+      }
+    } catch (error) {
+      console.error('Error updating order in Firebase:', error);
+    }
+  };
+
+  // Handle order approval
+  const handleApproveClick = (order) => {
+    setApproveModal({ isOpen: true, order });
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!approveModal.order) return;
+    
     setLoading(true);
     try {
-      await database.ref(`/orders/${orderId}`).update({
+      const updates = {
         status: 'approved',
-        progress: 25,
-        updatedAt: new Date().toISOString()
-      });
+        progress: 25
+      };
+
+      await updateOrderInDatabase(approveModal.order.id, updates);
+      
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === approveModal.order.id
+            ? { ...order, ...updates, updatedAt: new Date().toISOString() }
+            : order
+        )
+      );
+
+      setApproveModal({ isOpen: false, order: null });
+      console.log(`Order ${approveModal.order.orderId} approved`);
     } catch (error) {
       console.error('Error approving order:', error);
     } finally {
@@ -374,14 +575,33 @@ const Dashboard = ({ user, onLogout }) => {
     }
   };
 
-  // Reject order
-  const handleReject = async (orderId) => {
+  // Handle order rejection
+  const handleRejectClick = (order) => {
+    setRejectModal({ isOpen: true, order });
+  };
+
+  const handleRejectConfirm = async (rejectionReason) => {
+    if (!rejectModal.order) return;
+    
     setLoading(true);
     try {
-      await database.ref(`/orders/${orderId}`).update({
+      const updates = {
         status: 'rejected',
-        updatedAt: new Date().toISOString()
-      });
+        rejectionReason: rejectionReason
+      };
+
+      await updateOrderInDatabase(rejectModal.order.id, updates);
+      
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === rejectModal.order.id
+            ? { ...order, ...updates, updatedAt: new Date().toISOString() }
+            : order
+        )
+      );
+
+      setRejectModal({ isOpen: false, order: null });
+      console.log(`Order ${rejectModal.order.orderId} rejected with reason: ${rejectionReason}`);
     } catch (error) {
       console.error('Error rejecting order:', error);
     } finally {
@@ -389,24 +609,47 @@ const Dashboard = ({ user, onLogout }) => {
     }
   };
 
-  // Update progress
+  // Handle progress update
   const handleUpdateProgress = async (orderId, newProgress) => {
     setLoading(true);
     try {
-      const updates = {
-        progress: newProgress,
-        updatedAt: new Date().toISOString()
-      };
+      const updates = { progress: newProgress };
+      
+      // Update status based on progress
       if (newProgress === 100) {
         updates.status = 'completed';
       } else if (newProgress > 0) {
         updates.status = 'approved';
       }
-      await database.ref(`/orders/${orderId}`).update(updates);
+
+      await updateOrderInDatabase(orderId, updates);
+      
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === orderId
+            ? { ...order, ...updates, updatedAt: new Date().toISOString() }
+            : order
+        )
+      );
+      
+      console.log(`Order ${orderId} progress updated to ${newProgress}%`);
     } catch (error) {
       console.error('Error updating progress:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Close modals
+  const handleCloseApproveModal = () => {
+    if (!loading) {
+      setApproveModal({ isOpen: false, order: null });
+    }
+  };
+
+  const handleCloseRejectModal = () => {
+    if (!loading) {
+      setRejectModal({ isOpen: false, order: null });
     }
   };
 
@@ -441,7 +684,7 @@ const Dashboard = ({ user, onLogout }) => {
         return {
           icon: '✅',
           title: 'No Completed Orders',
-          description: 'Completed orders will appear here for your reference.'
+          description: 'Completed and rejected orders will appear here for your reference.'
         };
       default:
         return { icon: '📂', title: 'No Orders', description: 'No orders found.' };
@@ -482,14 +725,16 @@ const Dashboard = ({ user, onLogout }) => {
         ),
         React.createElement('li', {
           className: `nav-tab ${activeTab === 'pending' ? 'active' : ''}`,
-          onClick: () => setActiveTab('pending')
+          onClick: () => setActiveTab('pending'
+          )
         },
           'Pending Orders',
           tabCounts.pending > 0 && React.createElement('span', { className: 'nav-tab-badge' }, tabCounts.pending)
         ),
         React.createElement('li', {
           className: `nav-tab ${activeTab === 'completed' ? 'active' : ''}`,
-          onClick: () => setActiveTab('completed')
+          onClick: () => setActiveTab('completed'
+          )
         },
           'Completed Orders',
           tabCounts.completed > 0 && React.createElement('span', { className: 'nav-tab-badge' }, tabCounts.completed)
@@ -506,9 +751,9 @@ const Dashboard = ({ user, onLogout }) => {
           activeTab === 'pending' ? 'Pending Orders' : 'Completed Orders'
         ),
         React.createElement('p', { className: 'section-description' },
-          activeTab === 'approval' ? 'Review and approve or reject incoming orders' :
+          activeTab === 'approval' ? 'Review and approve or reject incoming orders with confirmation dialogs' :
           activeTab === 'pending' ? 'Track progress and update status of ongoing projects' :
-          'View completed orders and project history'
+          'View completed orders, rejected orders with reasons, and project history'
         )
       ),
 
@@ -525,8 +770,8 @@ const Dashboard = ({ user, onLogout }) => {
             React.createElement(OrderCard, {
               key: order.id,
               order: order,
-              onApprove: handleApprove,
-              onReject: handleReject,
+              onApprove: handleApproveClick,
+              onReject: handleRejectClick,
               onUpdateProgress: handleUpdateProgress,
               showProgressTracker: activeTab === 'pending' || activeTab === 'completed'
             })
@@ -538,7 +783,24 @@ const Dashboard = ({ user, onLogout }) => {
           React.createElement('h3', { className: 'empty-title' }, getEmptyStateContent().title),
           React.createElement('p', { className: 'empty-description' }, getEmptyStateContent().description)
         )
-    )
+    ),
+
+    // Modals
+    React.createElement(ApproveModal, {
+      isOpen: approveModal.isOpen,
+      onClose: handleCloseApproveModal,
+      order: approveModal.order,
+      onConfirm: handleApproveConfirm,
+      loading: loading
+    }),
+
+    React.createElement(RejectModal, {
+      isOpen: rejectModal.isOpen,
+      onClose: handleCloseRejectModal,
+      order: rejectModal.order,
+      onConfirm: handleRejectConfirm,
+      loading: loading
+    })
   );
 };
 
